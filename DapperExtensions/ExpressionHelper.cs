@@ -19,5 +19,7 @@ namespace DapperExtensions
             }
             throw new ArgumentException("expression 不是 MemberExpression 类型");
         }
+
+
     }
 }

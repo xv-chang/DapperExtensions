@@ -18,7 +18,7 @@ namespace DapperExtensions
         }
         public static InsertBuilder<T> Insert<T>(this IDbConnection conn,T entity)
         {
-            return new InsertBuilder<T>(conn);
+            return new InsertBuilder<T>(conn,entity);
         }
 
     }

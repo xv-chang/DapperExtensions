@@ -30,7 +30,6 @@ namespace DapperExtensions.Test
                 ClassId = 1
 
             };
-
             conn.Insert(stu).Execute();
 
 

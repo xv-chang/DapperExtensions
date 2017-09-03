@@ -10,12 +10,15 @@ namespace DapperExtensions
     {
         private IDbConnection _conn;
         private string _whereSQL;
+        private SqlTranslator _sqlTranslator;
         public DeleteBuilder(IDbConnection conn)
         {
             _conn = conn;
+            _sqlTranslator = new SqlTranslator();
         }
         public DeleteBuilder<T> Where(Expression<Func<T, object>> expression)
         {
+            var sql= _sqlTranslator.VisitLambda(expression);
             return this;
         }
 
