@@ -3,28 +3,29 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using System.Data;
+using DapperExtensions.FluentMap.Resolvers;
+using Dapper;
 
 namespace DapperExtensions
 {
-    public class DeleteBuilder<T>
+    public class DeleteBuilder<T> : BaseBuilder<T>
     {
-        private IDbConnection _conn;
-        private string _whereSQL;
-        private SqlTranslator _sqlTranslator;
-        public DeleteBuilder(IDbConnection conn)
+
+        private StringBuilder WhereBuilder { set; get; }
+        public DeleteBuilder(IDbConnection conn) : base(conn)
         {
-            _conn = conn;
-            _sqlTranslator = new SqlTranslator();
+
         }
-        public DeleteBuilder<T> Where(Expression<Func<T, object>> expression)
+        public DeleteBuilder<T> Where(Expression<Func<T, bool>> expression)
         {
-            var sql= _sqlTranslator.VisitLambda(expression);
+            var sql = _sqlTranslator.VisitExpression(expression);
+            WhereBuilder.Append(WhereBuilder.Length > 0 ? $" AND {sql}" : $" WHERE {sql}");
             return this;
         }
-
-        public int Execute()
+        public override int Execute()
         {
-            throw new NotImplementedException();
+            var sql = $"DELETE FROM {TableName}{WhereBuilder.ToString()}";
+            return _conn.Execute(sql, GetParamters());
         }
 
     }

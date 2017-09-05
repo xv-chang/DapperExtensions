@@ -2,21 +2,31 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
+using DapperExtensions.FluentMap.Resolvers;
+using Dapper;
 
 namespace DapperExtensions
 {
-    public class InsertBuilder<T>
+    public class InsertBuilder<T> : BaseBuilder<T>
     {
-        private IDbConnection _conn;
-       
-        public InsertBuilder(IDbConnection conn,T entity)
+        private StringBuilder FieldBuilder = new StringBuilder();
+        private StringBuilder ValueBuilder = new StringBuilder();
+        public InsertBuilder(IDbConnection conn, T entity) : base(conn)
         {
-            _conn = conn;
+            var properties = DefaultResolver.ResolveProperties(type, true);
+            foreach (var p in properties)
+            {
+                var fieldName = DefaultResolver.ResolveColumnName(p);
+                FieldBuilder.Append(FieldBuilder.Length > 0 ? $",{fieldName}" : fieldName);
+                var paramterName = GetNewParamter();
+                SetParamter(paramterName, p.GetValue(entity, null));
+                ValueBuilder.Append(ValueBuilder.Length > 0 ? $",{paramterName}" : paramterName);
+            }
         }
-
-        public int Execute()
+        public override int Execute()
         {
-            throw new NotImplementedException();
+            var sql = $"INSERT {TableName}({FieldBuilder.ToString()})VALUES({ValueBuilder.ToString()})";
+            return _conn.Execute(sql, GetParamters());
         }
 
     }

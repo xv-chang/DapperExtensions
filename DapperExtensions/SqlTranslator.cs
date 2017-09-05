@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using DapperExtensions.Query;
+using DapperExtensions.FluentMap.Resolvers;
+using System.Reflection;
 
 namespace DapperExtensions
 {
-    public class SqlTranslator
+    public class SqlTranslator<T>
     {
-
+        public readonly Type Type = typeof(T);
         public Dictionary<string, object> Params = new Dictionary<string, object>();
         private int _index = 0;
         public string PIndex
         {
             get { return $"p{_index++}"; }
         }
-
         public string VisitExpression(Expression expression)
         {
             switch (expression.NodeType)
@@ -36,17 +37,14 @@ namespace DapperExtensions
                     return VisitNew((NewExpression)expression);
                 case ExpressionType.MemberAccess:
                     return VisitMemberAccess((MemberExpression)expression);
+                case ExpressionType.Lambda:
+                    return VisitExpression(((LambdaExpression)expression).Body);
                 default:
                     throw new NotImplementedException($"不支持类型{expression.NodeType.ToString()}");
             }
         }
 
-        public string VisitLambda(LambdaExpression expression)
-        {
-            return VisitExpression(expression.Body);
-        }
-
-        private string VisitBinary(BinaryExpression expression)
+        public string VisitBinary(BinaryExpression expression)
         {
             //节点类型是字段或属性
             if (expression.Left.NodeType == ExpressionType.MemberAccess)
@@ -75,8 +73,8 @@ namespace DapperExtensions
                     default:
                         throw new NotImplementedException($"不支持类型{expression.NodeType.ToString()}");
                 }
-                var fKey = ((MemberExpression)expression.Left).Member.Name;
-                var fVal = GetExpressValue(expression.Right);
+                var fKey = VisitMemberAccess((MemberExpression)expression.Left);
+                var fVal = ExpressionHelper.GetExpressValue(expression.Right);
                 var p = PIndex;
                 Params.Add(p, fVal);
                 return $" {fKey}{op}@{p}";
@@ -84,19 +82,16 @@ namespace DapperExtensions
             return string.Empty;
         }
 
-        private string VisitMemberAccess(MemberExpression expression)
+        public string VisitMemberAccess(MemberExpression expression)
         {
-            return expression.Member.Name;
+            return DefaultResolver.ResolveColumnName((PropertyInfo)expression.Member);
         }
-        private object VisitConstant(ConstantExpression expression)
-        {
-            return expression.Value;
-        }
+
         /// <summary>
         /// 处理调用方法 如 Contains
         /// </summary>
         /// <param name="expression"></param>
-        private string VisitMethodCall(MethodCallExpression expression)
+        public string VisitMethodCall(MethodCallExpression expression)
         {
             var methodName = expression.Method.Name;
             var args = expression.Arguments;
@@ -105,8 +100,8 @@ namespace DapperExtensions
                 case "Like":
                     {
                         var fKey = VisitMemberAccess((MemberExpression)args[0]);
-                        var fval = GetExpressValue(args[1]);
-                        var mode = (MatchMode)GetExpressValue(args[2]);
+                        var fval = ExpressionHelper.GetExpressValue(args[1]);
+                        var mode = (MatchMode)ExpressionHelper.GetExpressValue(args[2]);
                         var p = PIndex;
                         switch (mode)
                         {
@@ -163,7 +158,7 @@ namespace DapperExtensions
             }
         }
 
-        private string VisitAndOr(BinaryExpression andOr)
+        public string VisitAndOr(BinaryExpression andOr)
         {
             var op = andOr.NodeType == ExpressionType.AndAlso ? " AND " : " OR ";
             //处理左边表达式
@@ -173,7 +168,7 @@ namespace DapperExtensions
             return $"({leftSql} {op} {rightSql})";
         }
 
-        private string VisitNew(NewExpression expression)
+        public string VisitNew(NewExpression expression)
         {
             StringBuilder builder = new StringBuilder();
             if (expression.Members.Count > 0)
@@ -185,20 +180,10 @@ namespace DapperExtensions
             }
             return builder.ToString().TrimEnd(',');
         }
-        private object[] VisitNewArrayInit(NewArrayExpression expression)
+        public object[] VisitNewArrayInit(NewArrayExpression expression)
         {
             var val = Expression.Lambda<Func<object[]>>(expression).Compile()();
             return val;
         }
-
-        private object GetExpressValue(Expression expression)
-        {
-            if (expression.NodeType == ExpressionType.Constant)
-            {
-                return VisitConstant((ConstantExpression)expression);
-            }
-            return Expression.Lambda<Func<object>>(expression).Compile()();
-        }
-
     }
 }

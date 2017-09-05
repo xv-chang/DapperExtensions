@@ -9,17 +9,16 @@ namespace DapperExtensions.Test
     {
         static void Main(string[] args)
         {
-            
+
             IDbConnection conn = null;
             conn.Update<Student>().Where(x => x.Name == "张三")
-                .SetField(x => x.Gender).WithValue(23)
-                .SetField(x => x.ClassId).WithValue(2)
+                .SetField(x => x.Gender == Gender.男)
+                .SetField(x => x.ClassId == 1)
                 .Execute();
 
             conn.Delete<Student>()
                 .Where(x => x.Gender == Gender.男)
                 .Execute();
-
 
             var stu = new Student()
             {
