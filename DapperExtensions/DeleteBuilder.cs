@@ -11,7 +11,7 @@ namespace DapperExtensions
     public class DeleteBuilder<T> : BaseBuilder<T>
     {
 
-        private StringBuilder WhereBuilder { set; get; }
+        private StringBuilder WhereBuilder = new StringBuilder();
         public DeleteBuilder(IDbConnection conn) : base(conn)
         {
 

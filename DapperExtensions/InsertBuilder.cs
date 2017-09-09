@@ -25,7 +25,7 @@ namespace DapperExtensions
         }
         public override int Execute()
         {
-            var sql = $"INSERT {TableName}({FieldBuilder.ToString()})VALUES({ValueBuilder.ToString()})";
+            var sql = $"INSERT INTO {TableName}({FieldBuilder.ToString()})VALUES({ValueBuilder.ToString()})";
             return _conn.Execute(sql, GetParamters());
         }
 

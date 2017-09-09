@@ -9,10 +9,10 @@ namespace DapperExtensions.FluentMap.Mapping
     public class EntityMap<T>: IEntityMap
     {
         public string TableName { get; private set; }
-        public List<PropertyMap> PropertyMaps { set; get; }
-        public List<ReferenceMap> ReferenceMaps { set; get; }
+        public List<PropertyMap> PropertyMaps { set; get; } = new List<PropertyMap>();
+        public List<ReferenceMap> ReferenceMaps { set; get; } = new List<ReferenceMap>();
 
-        public PropertyMap Map(Expression<Func<T, object>> expression)
+        public PropertyMap Map<TValue>(Expression<Func<T, TValue>> expression)
         {
             var p = (PropertyInfo)ExpressionHelper.GetMemberInfo(expression);
             var pMap = new PropertyMap(p);
@@ -21,7 +21,7 @@ namespace DapperExtensions.FluentMap.Mapping
             return pMap;
         }
 
-        public PropertyMap Id(Expression<Func<T, object>> expression)
+        public PropertyMap Id<TValue>(Expression<Func<T, TValue>> expression)
         {
             return Map(expression).Column("Id").IsKey().IsIdentity();
         }

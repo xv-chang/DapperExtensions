@@ -15,7 +15,7 @@ namespace DapperExtensions
         private int _index = 0;
         public string PIndex
         {
-            get { return $"p{_index++}"; }
+            get { return $"@p{_index++}"; }
         }
         public string VisitExpression(Expression expression)
         {
@@ -39,6 +39,8 @@ namespace DapperExtensions
                     return VisitMemberAccess((MemberExpression)expression);
                 case ExpressionType.Lambda:
                     return VisitExpression(((LambdaExpression)expression).Body);
+                case ExpressionType.Convert:
+                    return VisitUnaryExpression((UnaryExpression)expression);
                 default:
                     throw new NotImplementedException($"不支持类型{expression.NodeType.ToString()}");
             }
@@ -47,7 +49,7 @@ namespace DapperExtensions
         public string VisitBinary(BinaryExpression expression)
         {
             //节点类型是字段或属性
-            if (expression.Left.NodeType == ExpressionType.MemberAccess)
+            if (expression.Left.NodeType == ExpressionType.MemberAccess||expression.Left.NodeType== ExpressionType.Convert)
             {
                 var op = string.Empty;
                 switch (expression.NodeType)
@@ -73,11 +75,11 @@ namespace DapperExtensions
                     default:
                         throw new NotImplementedException($"不支持类型{expression.NodeType.ToString()}");
                 }
-                var fKey = VisitMemberAccess((MemberExpression)expression.Left);
+                var fKey = VisitExpression(expression.Left);
                 var fVal = ExpressionHelper.GetExpressValue(expression.Right);
                 var p = PIndex;
                 Params.Add(p, fVal);
-                return $" {fKey}{op}@{p}";
+                return $" {fKey}{op}{p}";
             }
             return string.Empty;
         }
@@ -85,6 +87,10 @@ namespace DapperExtensions
         public string VisitMemberAccess(MemberExpression expression)
         {
             return DefaultResolver.ResolveColumnName((PropertyInfo)expression.Member);
+        }
+        public string VisitUnaryExpression(UnaryExpression expression)
+        {
+            return VisitExpression(expression.Operand);
         }
 
         /// <summary>

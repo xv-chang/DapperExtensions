@@ -19,6 +19,7 @@ namespace DapperExtensions
         {
             _conn = conn;
             _sqlTranslator = new SqlTranslator<T>();
+            TableName = DefaultResolver.ResolveTableName(type);
         }
         public void SetParamter(string key,object val)
         {

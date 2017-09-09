@@ -27,16 +27,13 @@ namespace DapperExtensions.Test.Model
         public StudentMap()
         {
             Table("Student");
-            Id(x => x.Id).Column("StudentId");
+            Id(x => x.Id).Column("Id");
             Map(x => x.Name).Column("Name");
             Map(x => x.Gender).Column("Gender");
             Map(x => x.Age).Column("Age");
             Map(x => x.Birth).Column("Birth");
             Map(x => x.ClassId).Column("ClassId");
-
             HasOne(x => x.ClassRoom).Table("ClassRoom").Column("ClassId");
-
-
         }
     }
 }
