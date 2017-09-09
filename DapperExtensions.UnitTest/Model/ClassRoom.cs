@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using DapperExtensions.FluentMap.Mapping;
 
-namespace DapperExtensions.Test.Model
+namespace DapperExtensions.UnitTest.Model
 {
     public class ClassRoom
     {

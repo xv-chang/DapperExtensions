@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using DapperExtensions.FluentMap.Mapping;
 
-namespace DapperExtensions.Test.Model
+namespace DapperExtensions.UnitTest.Model
 {
     public class Student
     {
@@ -19,8 +19,7 @@ namespace DapperExtensions.Test.Model
     public enum Gender
     {
         男,
-        女,
-        保密
+        女
     }
     public class StudentMap:EntityMap<Student>
     {
